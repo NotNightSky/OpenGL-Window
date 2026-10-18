@@ -14,7 +14,7 @@ static auto fragmentShaderSource = R"(
     #version 330 core
     out vec4 FragColor;
     void main() {
-        FragColor = vec4(0.678, 0.847, 0.906, 1.0); // Bright orange triangle
+        FragColor = vec4(0.694, 0.145, 0.918, 1.0); // Bright orange triangle
     }
 )";
 
@@ -67,13 +67,14 @@ int main(int argc, char* argv[]) {
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
 
-    GLuint VAO, VBO;
+    GLuint VAO, VBO, EBO;
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
+    glGenBuffers(1, &EBO);
 
     glBindVertexArray(VAO);
 
-    GLfloat hello_triangle[] = {
+    GLfloat vertices[] = {
         -0.5f,  0.5f,
         -0.5f,  -0.5f,
         0.5f,  0.5f,
@@ -83,11 +84,18 @@ int main(int argc, char* argv[]) {
         0.5f,  0.5f,
     };
 
+    GLint indices[] = {
+        0, 1, 2, 3, 4, 2
+    };
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(hello_triangle), hello_triangle, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), static_cast<void *>(nullptr));
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), static_cast<void *>(nullptr));
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
@@ -112,8 +120,9 @@ int main(int argc, char* argv[]) {
 
         glUseProgram(shaderProgram);
         glBindVertexArray(VAO);
-
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        glBindVertexArray(0);
 
         SDL_GL_SwapWindow(window);
 
