@@ -5,12 +5,12 @@
 const char *vertexShaderSource =
     "#version 330 core\n"
     "layout (location = 0) in vec3 aPos;\n"
-    "layout (location = 1) in vec3 aColor;\n"
+    "layout (location = 1) in vec4 aColor;\n"
     "out vec4 color;\n"
     "void main()\n"
     "{\n"
     "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
-    "   color = vec4(aColor, 1.0f);\n"
+    "   color = aColor;\n"
     "}\0";
 
 const char *fragmentShaderSource =
@@ -20,7 +20,7 @@ const char *fragmentShaderSource =
     "\n"
     "void main()\n"
     "{\n"
-    "   FragColor = vec4(color);\n"
+    "   FragColor = color;\n"
     "}\0";
 
 GLint width = 0, height = 0;
@@ -54,7 +54,14 @@ int main(int argc, char* argv[]) {
 
     SDL_GetWindowSize(window, &width, &height);
 
-    gladLoaderLoadGL();
+    int loaded = gladLoaderLoadGL();
+    if (loaded == 0) {
+        SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Could not load GL loader: %s\n", SDL_GetError());
+        SDL_GL_DestroyContext(glContext);
+        SDL_DestroyWindow(window);
+        SDL_Quit();
+        return 1;
+    }
 
     GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
@@ -80,16 +87,16 @@ int main(int argc, char* argv[]) {
     glBindVertexArray(VAO);
 
     GLfloat vertices[] = {
-        -0.5f,  0.5f,
-        0.780f, 0.067f, 0.882f,
-        -0.5f,  -0.5f,
-        0.498f, 0.322f, 1.000f,
-        0.5f,  -0.5f,
-        0.498f, 0.322f, 1.000f,
-        0.0f,  0.0f,
-        0.780f, 0.067f, 0.882f,
-        0.5f,  0.5f,
-        0.894f, 0.282f, 0.341f,
+        -0.5f,  0.5f, 0.0f,
+        0.780f, 0.067f, 0.882f, 1.0f,
+        -0.5f,  -0.5f, 0.0f,
+        0.498f, 0.322f, 1.000f, 1.0f,
+        0.5f,  -0.5f, 0.0f,
+        0.498f, 0.322f, 1.000f, 1.0f,
+        0.0f,  0.0f, 0.0f,
+        0.780f, 0.067f, 0.882f, 1.0f,
+        0.5f,  0.5f, 0.0f,
+        0.894f, 0.282f, 0.341f, 1.0f,
     };
 
     GLushort indices[] = {
@@ -103,13 +110,16 @@ int main(int argc, char* argv[]) {
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid*)NULL);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 7 * sizeof(GLfloat), (GLvoid*)NULL);
 
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (char*)(sizeof(GLfloat) * 2));
+    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 7 * sizeof(GLfloat), (char*)(sizeof(GLfloat) * 3));
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     while (running) {
         SDL_Event event;
@@ -139,8 +149,11 @@ int main(int argc, char* argv[]) {
         SDL_Delay(16);
     }
 
+    glDisable(GL_BLEND);
+
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
+    glDeleteBuffers(1, &EBO);
     glDeleteProgram(shaderProgram);
 
     SDL_GL_DestroyContext(glContext);

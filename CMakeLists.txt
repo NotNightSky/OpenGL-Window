@@ -7,7 +7,7 @@ find_package(SDL3 REQUIRED CONFIG REQUIRED COMPONENTS SDL3-shared)
 
 find_package(OpenGL REQUIRED)
 
-include_directories( SYSTEM "/include" )
+include_directories( SYSTEM "include/" )
 
 add_executable(window src/main.c src/gl.c)
 
