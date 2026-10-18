@@ -81,7 +81,6 @@ int main(int argc, char* argv[]) {
         
         0.5f,  -0.5f,
         -0.5f,  -0.5f,
-        0.5f,  0.5f,
     };
 
     GLint indices[] = {
