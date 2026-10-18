@@ -5,18 +5,22 @@
 const char *vertexShaderSource =
     "#version 330 core\n"
     "layout (location = 0) in vec3 aPos;\n"
+    "layout (location = 1) in vec3 aColor;\n"
+    "out vec4 color;\n"
     "void main()\n"
     "{\n"
     "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+    "   color = vec4(aColor, 1.0f);\n"
     "}\0";
 
 const char *fragmentShaderSource =
     "#version 330 core\n"
     "out vec4 FragColor;\n"
+    "in vec4 color;\n"
     "\n"
     "void main()\n"
     "{\n"
-    "   FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
+    "   FragColor = vec4(color);\n"
     "}\0";
 
 GLint width = 0, height = 0;
@@ -77,15 +81,19 @@ int main(int argc, char* argv[]) {
 
     GLfloat vertices[] = {
         -0.5f,  0.5f,
+        0.780f, 0.067f, 0.882f,
         -0.5f,  -0.5f,
-        0.5f,  0.5f,
-        
+        0.498f, 0.322f, 1.000f,
         0.5f,  -0.5f,
-        -0.5f,  -0.5f,
+        0.498f, 0.322f, 1.000f,
+        0.0f,  0.0f,
+        0.780f, 0.067f, 0.882f,
+        0.5f,  0.5f,
+        0.894f, 0.282f, 0.341f,
     };
 
     GLushort indices[] = {
-        0, 1, 2, 3, 4, 2
+        0, 1, 2, 3, 4, 0
     };
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
@@ -95,7 +103,10 @@ int main(int argc, char* argv[]) {
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), NULL);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid*)NULL);
+
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (char*)(sizeof(GLfloat) * 2));
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
@@ -120,7 +131,6 @@ int main(int argc, char* argv[]) {
 
         glUseProgram(shaderProgram);
         glBindVertexArray(VAO);
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0);
         glBindVertexArray(0);
 
