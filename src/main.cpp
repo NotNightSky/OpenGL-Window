@@ -83,7 +83,7 @@ int main(int argc, char* argv[]) {
         -0.5f,  -0.5f,
     };
 
-    GLint indices[] = {
+    GLushort indices[] = {
         0, 1, 2, 3, 4, 2
     };
 
@@ -120,7 +120,7 @@ int main(int argc, char* argv[]) {
         glUseProgram(shaderProgram);
         glBindVertexArray(VAO);
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0);
         glBindVertexArray(0);
 
         SDL_GL_SwapWindow(window);
