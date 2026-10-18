@@ -14,7 +14,7 @@ static auto fragmentShaderSource = R"(
     #version 330 core
     out vec4 FragColor;
     void main() {
-        FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f); // Bright orange triangle
+        FragColor = vec4(0.678, 0.847, 0.906, 1.0); // Bright orange triangle
     }
 )";
 
@@ -74,9 +74,13 @@ int main(int argc, char* argv[]) {
     glBindVertexArray(VAO);
 
     GLfloat hello_triangle[] = {
-         0.0f,  1.0f,
-         1.0f, -1.0f,
-        -1.0f, -1.0f
+        -0.5f,  0.5f,
+        -0.5f,  -0.5f,
+        0.5f,  0.5f,
+        
+        0.5f,  -0.5f,
+        -0.5f,  -0.5f,
+        0.5f,  0.5f,
     };
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
@@ -109,7 +113,7 @@ int main(int argc, char* argv[]) {
         glUseProgram(shaderProgram);
         glBindVertexArray(VAO);
 
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
 
         SDL_GL_SwapWindow(window);
 
