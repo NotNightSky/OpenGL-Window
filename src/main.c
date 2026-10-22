@@ -1,29 +1,60 @@
-#include "../include/glad/gl.h"
+#include <glad/gl.h>
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
-
-const char *vertexShaderSource =
-    "#version 330 core\n"
-    "layout (location = 0) in vec3 aPos;\n"
-    "layout (location = 1) in vec4 aColor;\n"
-    "out vec4 color;\n"
-    "void main()\n"
-    "{\n"
-    "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
-    "   color = aColor;\n"
-    "}\0";
-
-const char *fragmentShaderSource =
-    "#version 330 core\n"
-    "out vec4 FragColor;\n"
-    "in vec4 color;\n"
-    "\n"
-    "void main()\n"
-    "{\n"
-    "   FragColor = color;\n"
-    "}\0";
+#include <stdlib.h>
+#include <stdio.h>
 
 GLint width = 0, height = 0;
+
+char* readShaderFile(const char* filepath) {
+    FILE* file = fopen(filepath, "rb");
+    if (file == NULL) {
+        SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Error: Could not open shader file %s\n", filepath);
+        return NULL;
+    }
+
+    fseek(file, 0, SEEK_END);
+    long length = ftell(file);
+    fseek(file, 0, SEEK_SET);
+
+    char* buffer = malloc(length + 1);
+    if (buffer == NULL) {
+        SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Error: Memory allocation failed for %s\n", filepath);
+        fclose(file);
+        return NULL;
+    }
+
+    size_t bytesRead = fread(buffer, 1, length, file);
+
+    buffer[bytesRead] = '\0';
+
+    fclose(file);
+    return buffer;
+}
+
+int checkStatus(GLuint obj, PFNGLGETSHADERIVPROC prop, GLenum pname, PFNGLGETSHADERINFOLOGPROC log) {
+    GLint vertexCompileStatus;
+    prop(obj, pname, &vertexCompileStatus);
+    if (vertexCompileStatus != GL_TRUE) {
+        GLint infoLen;
+        prop(obj, GL_INFO_LOG_LENGTH, &infoLen);
+
+        GLchar* buffer = malloc(infoLen * sizeof(GLchar));
+
+        if (buffer != NULL) {
+            GLsizei len;
+            log(obj, infoLen, &len, buffer);
+            SDL_LogError(SDL_LOG_CATEGORY_ERROR, "%s", buffer);
+            free(buffer);
+            return 0;
+        }
+    }
+    return 1;
+}
+
+int checkShader(GLuint shader) { return checkStatus(shader, glGetShaderiv, GL_COMPILE_STATUS, glGetShaderInfoLog); }
+
+int checkLinker(GLuint linker) { return checkStatus(linker, glGetProgramiv, GL_LINK_STATUS, glGetProgramInfoLog); }
 
 int main(int argc, char* argv[]) {
     bool running = true;
@@ -63,18 +94,25 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
+    const GLchar* vertex = readShaderFile("src/shaders/program.vert");
+    const GLchar* fragment = readShaderFile("src/shaders/program.frag");
+
     GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
+    glShaderSource(vertexShader, 1, (const GLchar**)&vertex, NULL);
     glCompileShader(vertexShader);
 
     GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
+    glShaderSource(fragmentShader, 1, (const GLchar**)&fragment, NULL);
     glCompileShader(fragmentShader);
+
+    if (!checkShader(vertexShader) || !checkShader(fragmentShader)) return 0;
 
     GLuint shaderProgram = glCreateProgram();
     glAttachShader(shaderProgram, vertexShader);
     glAttachShader(shaderProgram, fragmentShader);
     glLinkProgram(shaderProgram);
+
+    if (!checkLinker(shaderProgram)) return 0;
 
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
